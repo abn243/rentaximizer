@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
+import io
 
 # Titre de l'application
 st.set_page_config(page_title="RENTAXIMIZER", layout="wide")
@@ -85,8 +86,17 @@ df_export = pd.DataFrame({
 })
 
 @st.cache_data
-def convert_df(df):
-    return df.to_excel(index=False, engine='xlsxwriter')
+def convert_df_to_excel(df):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Résultats')
+    return output.getvalue()
 
-excel_data = convert_df(df_export)
-st.download_button("📤 Télécharger l'analyse (Excel)", data=excel_data, file_name="rentaximizer_resultats.xlsx")
+excel_bytes = convert_df_to_excel(df_export)
+
+st.download_button(
+    label="📤 Télécharger l'analyse (Excel)",
+    data=excel_bytes,
+    file_name="rentaximizer_resultats.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
